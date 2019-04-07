@@ -1,0 +1,22 @@
+# Documentation: http://docs.travis-ci.com/user/languages/julia/
+language: julia
+os:
+  - linux
+  - osx
+julia:
+  - 0.4
+  - 0.5
+  - nightly
+notifications:
+  email: false
+before_install:
+  - pip install --user backports.ssl_match_hostname
+  - pip install --user apache-libcloud
+script:
+  - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
+  - julia -e 'Pkg.clone(pwd()); Pkg.build("LibCloud"); Pkg.test("LibCloud"; coverage=true)'
+after_success:
+  # push coverage results to Coveralls
+  - julia -e 'cd(Pkg.dir("LibCloud")); Pkg.add("Coverage"); using Coverage; Coveralls.submit(Coveralls.process_folder())'
+  # push coverage results to Codecov
+  - julia -e 'cd(Pkg.dir("LibCloud")); Pkg.add("Coverage"); using Coverage; Codecov.submit(Codecov.process_folder())'
